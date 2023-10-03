@@ -13,10 +13,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: configure
+    - name: build
       run: |
         mkdir build
         cd build
         cmake -DCMAKE_BUILD_TYPE=Debug ..
-    - name: make
-      run: cmake --build .
+        cmake --build .
