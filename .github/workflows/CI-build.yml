@@ -45,5 +45,5 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake -G ${{ matrix.generator }} -DCMAKE_BUILD_TYPE=Debug ..
+        cmake -G ${{ matrix.generator }} -DCMAKE_BUILD_TYPE=${{ matrix.configuration }} ..
         cmake --build .
