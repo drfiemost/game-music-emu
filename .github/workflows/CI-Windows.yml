@@ -14,18 +14,18 @@ jobs:
       matrix:
         configuration: [Debug, Release]
         include:
-          - generator: Visual Studio 16 2019
+          - generator: Visual Studio 17 2022
             os: windows-latest
     env:
-      VS_PATH: C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\
-      MSBUILD_PATH: C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\
+      VS_PATH: C:\Program Files (x86)\Microsoft Visual Studio\2022\Community\
+      MSBUILD_PATH: C:\Program Files (x86)\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\
 
     steps:
     - uses: actions/checkout@v3
     - name: Install dependencies
       run: |
           choco install -y --no-progress cmake --install-arguments="ADD_CMAKE_TO_PATH=System"
-          choco install -y --no-progress visualstudio2019community
+          choco install -y --no-progress visualstudio2022community
     - name: Install SDL2
       shell: powershell
       run: |
