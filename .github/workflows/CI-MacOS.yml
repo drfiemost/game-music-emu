@@ -8,31 +8,18 @@ on:
 
 jobs:
   build:
-    name: ${{ matrix.platform }} (${{ matrix.configuration }})
+    name: macOS (${{ matrix.configuration }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        generator:
-          - Ninja
-          - Xcode
         configuration: [Debug, Release]
         include:
-          - generator: Ninja
-            platform: Linux
-            os: ubuntu-latest
           - generator: Xcode
-            platform: macOS
             os: macos-latest
 
     steps:
     - uses: actions/checkout@v3
-    - name: Install dependencies (Linux)
-      if: runner.os == 'Linux'
-      run: |
-          sudo apt-get update
-          sudo apt-get install build-essential g++ cmake ninja-build libsdl2-dev
-    - name: Install dependencies (macOS)
-      if: runner.os == 'macOS'
+    - name: Install dependencies
       env:
         HOMEBREW_NO_ANALYTICS: 1
         HOMEBREW_NO_INSTALL_CLEANUP: 1
@@ -45,5 +32,5 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake -G ${{ matrix.generator }} -DCMAKE_BUILD_TYPE=${{ matrix.configuration }} -DENABLE_UBSAN=OFF ..
+        cmake -G ${{ matrix.generator }} -DCMAKE_BUILD_TYPE=${{ matrix.configuration }} ..
         cmake --build .
