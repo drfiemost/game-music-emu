@@ -1,0 +1,33 @@
+name: CI Windows
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    name: Windows (${{ matrix.configuration }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+        include:
+          - generator: Visual Studio 16 2019
+            os: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install dependencies
+      run: |
+          choco install -y --no-progress cmake --install-arguments="ADD_CMAKE_TO_PATH=System"
+          choco install -y --no-progress visualstudio2019community
+          curl -O "https://www.libsdl.org/release/SDL2-devel-2.24.0-VC.zip"
+          powershell -command "Expand-Archive -Force '%cd%\SDL2-devel-2.24.0-VC.zip' '%cd%'"
+    - name: Build
+      run: |
+        mkdir build
+        cd build
+        cmake -G ${{ matrix.generator }} -DCMAKE_BUILD_TYPE=${{ matrix.configuration }} ..
+        cmake --build .
