@@ -23,8 +23,8 @@ jobs:
       run: |
           choco install -y --no-progress cmake --install-arguments="ADD_CMAKE_TO_PATH=System"
           choco install -y --no-progress visualstudio2019community
-          curl -O "https://www.libsdl.org/release/SDL2-devel-2.24.0-VC.zip"
-          powershell -command "Expand-Archive -Force '%cd%\SDL2-devel-2.24.0-VC.zip' '%cd%'"
+          #curl -O "https://www.libsdl.org/release/SDL2-devel-2.24.0-VC.zip"
+          #powershell -command "Expand-Archive -Force '%cd%\SDL2-devel-2.24.0-VC.zip' '%cd%'"
     - name: Build
       run: |
         mkdir build
