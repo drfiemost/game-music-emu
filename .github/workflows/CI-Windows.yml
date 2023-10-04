@@ -17,8 +17,8 @@ jobs:
           - generator: Visual Studio 16 2019
             os: windows-latest
     env:
-      VS_PATH: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\
-      MSBUILD_PATH: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\
+      VS_PATH: C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\
+      MSBUILD_PATH: C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\
 
     steps:
     - uses: actions/checkout@v3
