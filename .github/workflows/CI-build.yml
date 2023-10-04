@@ -8,14 +8,24 @@ on:
 
 jobs:
   build:
+    name: ${{ matrix.platform }} (${{ matrix.configuration }})
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, macos-latest ]
-      fail-fast: false
-
-    runs-on: ${{ matrix.os }}
+        generator:
+          - Ninja
+          - Xcode
+        configuration: [Debug, Release]
+        include:
+          - generator: Ninja
+            platform: Linux
+            os: ubuntu-latest
+          - generator: Xcode
+            platform: macOS
+            os: macos-latest
 
     steps:
+    - uses: actions/checkout@v3
     - name: Install dependencies (Linux)
       if: runner.os == 'Linux'
       run: |
@@ -31,7 +41,6 @@ jobs:
         brew update
         brew upgrade || true
         brew install sdl2
-    - uses: actions/checkout@v3
     - name: Build
       run: |
         mkdir build
