@@ -6,6 +6,10 @@ extern "C" {
 #include "ext/emu2413.h"
 }
 
+extern "C" {
+#include "ext/emu8950.h"
+}
+
 static unsigned char ym2413_inst[(16 + 3) * 8] =
 {
 #include "ext/2413tone.h"
@@ -41,16 +45,14 @@ blargg_err_t Opl_Apu::init( long clock, long rate, blip_time_t period, type_t ty
 		OPLL_SetChipMode((OPLL *) opl, 1);
 		OPLL_setPatch((OPLL *) opl, vrc7_inst);
 		break;
+
+	case type_msxaudio:
+		CHECK_ALLOC( opl = OPL_new( clock, rate ) );
+		OPL_setChipType( (OPL *) opl, 0 );
+		break;
 #if 0
 	case type_opl:
 		opl = ym3526_init( clock, rate );
-		break;
-
-	case type_msxaudio:
-		//logfile = fopen("c:\\temp\\msxaudio.log", "wb");
-		opl = y8950_init( clock, rate );
-		opl_memory = malloc( 32768 );
-		y8950_set_delta_t_memory( opl, opl_memory, 32768 );
 		break;
 
 	case type_opl2:
@@ -77,15 +79,13 @@ Opl_Apu::~Opl_Apu()
 		case type_vrc7:
 			OPLL_delete( (OPLL*)opl );
 			break;
+
+		case type_msxaudio:
+			OPL_delete( (OPL*)opl );
+			break;
 #if 0
 		case type_opl:
 			ym3526_shutdown( opl );
-			break;
-
-		case type_msxaudio:
-			y8950_shutdown( opl );
-			free( opl_memory );
-			//fclose( logfile );
 			break;
 
 		case type_opl2:
@@ -112,13 +112,13 @@ void Opl_Apu::reset()
 	case type_vrc7:
 		OPLL_reset( (OPLL*)opl );
 		break;
+
+	case type_msxaudio:
+		OPL_reset( (OPL*)opl );
+		break;
 #if 0
 	case type_opl:
 		ym3526_reset_chip( opl );
-		break;
-
-	case type_msxaudio:
-		y8950_reset_chip( opl );
 		break;
 
 	case type_opl2:
@@ -143,20 +143,15 @@ void Opl_Apu::write_data( blip_time_t time, int addr, int data )
 		OPLL_writeIO( (OPLL *) opl, 0, addr );
 		OPLL_writeIO( (OPLL *) opl, 1, data );
 		break;
+
+	case type_msxaudio:
+		OPL_writeIO( (OPL *) opl, 0, addr );
+		OPL_writeIO( (OPL *) opl, 1, data );
+		break;
 #if 0
 	case type_opl:
 		ym3526_write( opl, 0, addr );
 		ym3526_write( opl, 1, data );
-		break;
-
-	case type_msxaudio:
-		/*if ( addr >= 7 && addr <= 7 + 11 )
-		{
-			unsigned char temp [2] = { addr - 7, data };
-			fwrite( &temp, 1, 2, logfile );
-		}*/
-		y8950_write( opl, 0, addr );
-		y8950_write( opl, 1, data );
 		break;
 
 	case type_opl2:
@@ -181,17 +176,13 @@ int Opl_Apu::read( blip_time_t time, int port )
 	case type_smsfmunit:
 	case type_vrc7:
 		return 0;//ym2413_read( opl, port );
+
+	case type_msxaudio:
+		OPL_writeIO( (OPL *) opl, 0, port );
+		return OPL_readIO( (OPL *) opl );
 #if 0
 	case type_opl:
 		return ym3526_read( opl, port );
-
-	case type_msxaudio:
-		{
-			int ret = y8950_read( opl, port );
-			/*unsigned char temp [2] = { port + 0x80, ret };
-			fwrite( &temp, 1, 2, logfile );*/
-			return ret;
-		}
 
 	case type_opl2:
 		return ym3812_read( opl, port );
@@ -274,9 +265,56 @@ void Opl_Apu::run_until( blip_time_t end_time )
 				next_time = time;
 			}
 			break;
+
+		case type_msxaudio:
+			{
+				int32_t buffer [2];
+
+				if ( output_ )
+				{
+					// optimal case
+					do
+					{
+						OPL_calc_stereo( (OPL *) opl, buffer );
+						int amp = buffer [0] + buffer [1];
+						int delta = amp - last_amp;
+						if ( delta )
+						{
+							last_amp = amp;
+							synth.offset_inline( time, delta, output_ );
+						}
+						time += period_;
+					}
+					while ( time < end_time );
+				}
+				else
+				{
+					last_amp = 0;
+					do
+					{
+						OPL_calc_stereo( (OPL *) opl, buffer );
+						for ( int i = 0; i < osc_count; ++i )
+						{
+							if ( output_ )
+							{
+								int amp = ((OPL *) opl)->ch_out[i];
+								int delta = amp - last_amp;
+								if ( delta )
+								{
+									last_amp = amp;
+									synth.offset( time, delta, output_ );
+								}
+							}
+						}
+						time += period_;
+					}
+					while ( time < end_time );
+				}
+				next_time = time;
+			}
+			break;
 #if 0
 		case type_opl:
-		case type_msxaudio:
 		case type_opl2:
 			{
 				OPLSAMPLE buffer[ 1024 ];

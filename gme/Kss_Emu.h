@@ -86,9 +86,10 @@ private:
 		Ay_Apu*  psg;
 		Scc_Apu* scc;
 		Opl_Apu* music;
-		//Opl_Apu* audio;
+		Opl_Apu* audio;
 		int psg_latch;
 		int music_latch;
+		int audio_latch;
 	} msx;
 
 	friend void kss_cpu_out( class Kss_Cpu*, cpu_time_t, unsigned addr, int data );

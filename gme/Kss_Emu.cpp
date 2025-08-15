@@ -32,6 +32,7 @@ Kss_Emu::Kss_Emu()
 	msx.psg = 0;
 	msx.scc = 0;
 	msx.music = 0;
+	msx.audio = 0;
 	set_type( gme_kss_type );
 
 	memset( unmapped_read, 0xFF, sizeof unmapped_read );
@@ -51,6 +52,8 @@ void Kss_Emu::unload()
 	msx.scc = 0;
 	delete msx.music;
 	msx.music = 0;
+	delete msx.audio;
+	msx.audio = 0;
 	Classic_Emu::unload();
 }
 
@@ -122,7 +125,7 @@ extern gme_type_t const gme_kss_type = &gme_kss_type_;
 void Kss_Emu::update_gain()
 {
 	double g = gain();
-	if ( msx.music || sms.fm )
+	if ( msx.music || msx.audio || sms.fm )
 	{
 		g *= 0.3;
 	}
@@ -138,6 +141,8 @@ void Kss_Emu::update_gain()
 		msx.scc->volume( g );
 	if ( msx.music )
 		msx.music->volume( g );
+	if ( msx.audio )
+		msx.audio->volume( g );
 	if ( sms.psg )
 		sms.psg->volume( g );
 	if ( sms.fm )
@@ -193,7 +198,7 @@ blargg_err_t Kss_Emu::load_( Data_Reader& in )
 		int ram_mode = header_.device_flags & 0x84; // MSX
 		if ( header_.device_flags & 0x02 ) // SMS
 			ram_mode = (header_.device_flags & 0x88);
-		
+
 		if ( ram_mode )
 			debug_printf( "RAM not supported\n" );
 	}
@@ -263,9 +268,9 @@ blargg_err_t Kss_Emu::load_( Data_Reader& in )
 		// msx.audio
 		if ( header().device_flags & 0x08 )
 		{
-			//set_voice_count( osc_count );
-			//RETURN_ERR( new_opl_apu( Opl_Apu::type_msxaudio, &core.msx.audio ) );
-			set_warning( "MSX audio not supported" );
+			set_voice_count( osc_count );
+			RETURN_ERR( new_opl_apu( Opl_Apu::type_msxaudio, &msx.audio ) );
+			printf("MSX audio\n");
 		}
 
 		if ( !(header().device_flags & 0x80) )
@@ -292,7 +297,7 @@ blargg_err_t Kss_Emu::load_( Data_Reader& in )
 	}
 
 	set_silence_lookahead( 6 );
-	if ( sms.fm || msx.music )
+	if ( sms.fm || msx.music || msx.audio )
 	{
 		if ( !Opl_Apu::supported() )
 			set_warning( "FM sound not supported" );
@@ -311,6 +316,8 @@ void Kss_Emu::update_eq( blip_eq_t const& eq )
 		msx.scc->treble_eq( eq );
 	if ( msx.music )
 		msx.music->treble_eq( eq );
+	if ( msx.audio )
+		msx.audio->treble_eq( eq );
 	if ( sms.psg )
 		sms.psg->treble_eq( eq );
 	if ( sms.fm )
@@ -344,6 +351,8 @@ void Kss_Emu::set_voice( int i, Blip_Buffer* center, Blip_Buffer* left, Blip_Buf
 			msx.scc->osc_output( i, center );
 		if ( msx.music && i < msx.music->osc_count )
 			msx.music->set_output( i, center, NULL, NULL );
+		if ( msx.audio && i < msx.audio->osc_count )
+			msx.audio->set_output( i, center, NULL, NULL );
 	}
 }
 
@@ -409,6 +418,8 @@ blargg_err_t Kss_Emu::start_track_( int track )
 		msx.scc->reset();
 	if ( msx.music )
 		msx.music->reset();
+	if ( msx.audio )
+		msx.audio->reset();
 	if ( sms.psg )
 		sms.psg->reset();
 	if ( sms.fm )
@@ -424,6 +435,7 @@ blargg_err_t Kss_Emu::start_track_( int track )
 	update_gain();
 	msx.psg_latch = 0;
 	msx.music_latch = 0;
+	msx.audio_latch = 0;
 	sms.fm_latch = 0;
 
 	return 0;
@@ -531,7 +543,19 @@ void kss_cpu_out( Kss_Cpu* cpu, cpu_time_t time, unsigned addr, int data )
 			GME_APU_HOOK( &emu, emu.msx.music_latch, data );
 			emu.msx.music->write_data( time, emu.msx.music_latch, data );
 			return;
-			
+		}
+		break;
+
+	case 0xC0:
+		emu.msx.audio_latch = data;
+		return;
+
+	case 0xC1:
+		if ( emu.msx.audio )
+		{
+			GME_APU_HOOK( &emu, emu.msx.audio_latch, data );
+			emu.msx.audio->write_data( time, emu.msx.audio_latch, data );
+			return;
 		}
 		break;
 
@@ -545,7 +569,6 @@ void kss_cpu_out( Kss_Cpu* cpu, cpu_time_t time, unsigned addr, int data )
 			GME_APU_HOOK( &emu, emu.sms.fm_latch, data );
 			emu.sms.fm->write_data( time, emu.sms.fm_latch, data );
 			return;
-			
 		}
 		break;
 
@@ -614,6 +637,8 @@ blargg_err_t Kss_Emu::run_clocks( blip_time_t& duration, int )
 		msx.scc->end_frame( duration );
 	if ( msx.music )
 		msx.music->end_frame( duration );
+	if ( msx.audio )
+		msx.audio->end_frame( duration );
 	if ( sms.psg )
 		sms.psg->end_frame( duration );
 	if ( sms.fm )

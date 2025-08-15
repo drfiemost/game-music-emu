@@ -150,6 +150,10 @@ if(USE_GME_KSS)
                 Kss_Emu.h
                 Kss_Scc_Apu.cpp
                 Kss_Scc_Apu.h
+                ext/emu8950.c
+                ext/emu8950.h
+                ext/emuadpcm.c
+                ext/emuadpcm.h
         )
 endif()
 

@@ -232,7 +232,7 @@ blargg_err_t Nsf_Emu::init_sound()
 			vrc6 = BLARGG_NEW Nes_Vrc6_Apu;
 			CHECK_ALLOC( vrc6 );
 			adjusted_gain *= 0.75;
-
+printf("*** vrc6 ***\n");
 			apu_names[count + 0] = "Saw Wave";
 			apu_names[count + 1] = "Square 3";
 			apu_names[count + 2] = "Square 4";
@@ -245,7 +245,7 @@ blargg_err_t Nsf_Emu::init_sound()
 			namco = BLARGG_NEW Nes_Namco_Apu;
 			CHECK_ALLOC( namco );
 			adjusted_gain *= 0.75;
-
+printf("*** namco ***\n");
 			apu_names[count + 0] = "Wave 1";
 			apu_names[count + 1] = "Wave 2";
 			apu_names[count + 2] = "Wave 3";
@@ -263,7 +263,7 @@ blargg_err_t Nsf_Emu::init_sound()
 			fme7 = BLARGG_NEW Nes_Fme7_Apu;
 			CHECK_ALLOC( fme7 );
 			adjusted_gain *= 0.75;
-
+printf("*** fme7 ***\n");
 			apu_names[count + 0] = "Square 3";
 			apu_names[count + 1] = "Square 4";
 			apu_names[count + 2] = "Square 5";
@@ -276,7 +276,7 @@ blargg_err_t Nsf_Emu::init_sound()
 			fds = BLARGG_NEW Nes_Fds_Apu;
 			CHECK_ALLOC( fds );
 			adjusted_gain *= 0.75;
-
+printf("*** fds ***\n");
 			apu_names[count + 0] = "Wave";
 
 			count += Nes_Fds_Apu::osc_count;
@@ -287,7 +287,7 @@ blargg_err_t Nsf_Emu::init_sound()
 			mmc5 = BLARGG_NEW Nes_Mmc5_Apu;
 			CHECK_ALLOC( mmc5 );
 			adjusted_gain *= 0.75;
-
+printf("*** mmc5 ***\n");
 			apu_names[count + 0] = "Square 3";
 			apu_names[count + 1] = "Square 4";
 			apu_names[count + 2] = "PCM";
@@ -301,7 +301,7 @@ blargg_err_t Nsf_Emu::init_sound()
 			CHECK_ALLOC( vrc7 );
 			RETURN_ERR( vrc7->init() );
 			adjusted_gain *= 0.75;
-
+printf("*** vrc7 ***\n");
 			apu_names[count + 0] = "FM 1";
 			apu_names[count + 1] = "FM 2";
 			apu_names[count + 2] = "FM 3";
