@@ -9,6 +9,7 @@
 #include "Kss_Cpu.h"
 #include "Sms_Apu.h"
 #include "Ay_Apu.h"
+#include "Opl_Apu.h"
 
 class Kss_Emu : private Kss_Cpu, public Classic_Emu {
 	typedef Kss_Cpu cpu;
@@ -74,18 +75,20 @@ private:
 
 	blip_time_t play_period;
 	blip_time_t next_play;
-	int ay_latch;
 
 	struct {
 		Sms_Apu* psg;
-		//Opl_Apu* fm;
+		Opl_Apu* fm;
+		int fm_latch;
 	} sms;
 
 	struct {
 		Ay_Apu*  psg;
 		Scc_Apu* scc;
-		//Opl_Apu* music;
+		Opl_Apu* music;
 		//Opl_Apu* audio;
+		int psg_latch;
+		int music_latch;
 	} msx;
 
 	friend void kss_cpu_out( class Kss_Cpu*, cpu_time_t, unsigned addr, int data );

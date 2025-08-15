@@ -81,6 +81,19 @@ if(USE_GME_VGM OR USE_GME_GYM OR USE_GME_KSS)
         )
 endif()
 
+# or emu2413
+if(USE_GME_NSF OR USE_GME_NSFE OR USE_GME_KSS)
+    list(APPEND libgme_SRCS
+                ext/emu2413.c
+                ext/emu2413.h
+                ext/panning.c
+                ext/panning.h
+                ext/emutypes.h
+                ext/2413tone.h
+                ext/vrc7tone.h
+        )
+endif()
+
 if(USE_GME_AY)
     list(APPEND libgme_SRCS
               # Ay_Apu.cpp included earlier
@@ -130,6 +143,7 @@ if(USE_GME_KSS)
     list(APPEND libgme_SRCS
               # Ay_Apu.cpp included earlier
               # Sms_Apu.cpp included earlier
+                Opl_Apu.cpp
                 Kss_Cpu.cpp
                 Kss_Cpu.h
                 Kss_Emu.cpp
@@ -157,13 +171,6 @@ if(USE_GME_NSF OR USE_GME_NSFE)
                 Nes_Fds_Apu.h
                 Nes_Vrc7_Apu.cpp
                 Nes_Vrc7_Apu.h
-                ext/emu2413.c
-                ext/emu2413.h
-                ext/panning.c
-                ext/panning.h
-                ext/emutypes.h
-                ext/2413tone.h
-                ext/vrc7tone.h
                 Nsf_Emu.cpp
                 Nsf_Emu.h
         )

@@ -75,6 +75,7 @@ LOCAL_SRC_FILES := \
 	gme/Nes_Vrc7_Apu.cpp \
 	gme/Nsf_Emu.cpp \
 	gme/Nsfe_Emu.cpp \
+	gme/Opl_Apu.cpp \
 	gme/Sap_Apu.cpp \
 	gme/Sap_Cpu.cpp \
 	gme/Sap_Emu.cpp \
