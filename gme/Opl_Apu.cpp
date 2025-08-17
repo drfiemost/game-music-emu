@@ -10,16 +10,6 @@ extern "C" {
 #include "ext/emu8950.h"
 }
 
-static unsigned char ym2413_inst[(16 + 3) * 8] =
-{
-#include "ext/2413tone.h"
-};
-
-static unsigned char vrc7_inst[(16 + 3) * 8] =
-{
-#include "ext/vrc7tone.h"
-};
-
 Opl_Apu::Opl_Apu() { opl = 0; opl_memory = 0; }
 
 blargg_err_t Opl_Apu::init( long clock, long rate, blip_time_t period, type_t type )
@@ -36,14 +26,14 @@ blargg_err_t Opl_Apu::init( long clock, long rate, blip_time_t period, type_t ty
 	case type_msxmusic:
 	case type_smsfmunit:
 		CHECK_ALLOC( opl = OPLL_new( clock, rate ) );
-		OPLL_SetChipMode((OPLL *) opl, 0);
-		OPLL_setPatch((OPLL *) opl, ym2413_inst);
+		OPLL_setChipType((OPLL *) opl, 0);
+		OPLL_resetPatch((OPLL *) opl, 0);
 		break;
 
 	case type_vrc7:
 		CHECK_ALLOC( opl = OPLL_new( clock, rate ) );
-		OPLL_SetChipMode((OPLL *) opl, 1);
-		OPLL_setPatch((OPLL *) opl, vrc7_inst);
+		OPLL_setChipType((OPLL *) opl, 1);
+		OPLL_resetPatch((OPLL *) opl, 1);
 		break;
 
 	case type_msxaudio:
@@ -218,15 +208,14 @@ void Opl_Apu::run_until( blip_time_t end_time )
 		case type_smsfmunit:
 		case type_vrc7:
 			{
-				e_int32 buffer [2];
-				e_int32* buffers[2] = {&buffer[0], &buffer[1]};
+				int32_t buffer [2];
 
 				if ( output_ )
 				{
 					// optimal case
 					do
 					{
-						OPLL_calc_stereo( (OPLL *) opl, buffers, 1, -1 );
+						OPLL_calc_stereo( (OPLL *) opl, buffer );
 						int amp = buffer [0] + buffer [1];
 						int delta = amp - last_amp;
 						if ( delta )
@@ -243,13 +232,12 @@ void Opl_Apu::run_until( blip_time_t end_time )
 					last_amp = 0;
 					do
 					{
-						OPLL_advance( (OPLL *) opl );
+						OPLL_calc_stereo( (OPLL *) opl, buffer );
 						for ( int i = 0; i < osc_count; ++i )
 						{
 							if ( output_ )
 							{
-								OPLL_calc_stereo( (OPLL *) opl, buffers, 1, i );
-								int amp = buffer [0] + buffer [1];
+								int amp = ((OPLL *) opl)->ch_out[i];
 								int delta = amp - last_amp;
 								if ( delta )
 								{

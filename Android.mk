@@ -94,7 +94,6 @@ LOCAL_SRC_FILES := \
 	gme/ext/emu2413.c \
 	gme/ext/emu8950.c \
 	gme/ext/emuadpcm.c \
-	gme/ext/panning.c \
 	gme/gme.cpp
 
 LOCAL_EXPORT_C_INCLUDES = $(LOCAL_PATH)
