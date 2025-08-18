@@ -69,7 +69,7 @@ static void copy_kss_fields( Kss_Emu::header_t const& h, track_info_t* out )
 			system = "Game Gear";
 
 		if ( h.device_flags & 0x01 )
-			system = "Sega Mark III";
+			system = "Sega Mega Drive";
 	}
 	else
 	{
