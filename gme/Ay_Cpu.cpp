@@ -29,26 +29,13 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA */
 
 // Callbacks to emulator
 
-#define CPU_OUT( cpu, addr, data, TIME )\
-	ay_cpu_out( cpu, TIME, addr, data )
+#define CPU_OUT( cpu, addr, data, time )\
+	ay_cpu_out( cpu, time, addr, data )
 
-#define CPU_IN( cpu, addr, TIME )\
+#define CPU_IN( cpu, addr, time )\
 	ay_cpu_in( cpu, addr )
 
 #include "blargg_source.h"
-
-// flags, named with hex value for clarity
-enum {
-    S80 = 0x80,
-    Z40 = 0x40,
-    F20 = 0x20,
-    H10 = 0x10,
-    F08 = 0x08,
-    V04 = 0x04,
-    P04 = 0x04,
-    N02 = 0x02,
-    C01 = 0x01
-};
 
 #define SZ28P( n )  szpc [n]
 #define SZ28PC( n ) szpc [n]
@@ -60,31 +47,13 @@ enum {
 
 Ay_Cpu::Ay_Cpu()
 {
-	state = &state_;
-	for ( int i = 0x100; --i >= 0; )
-	{
-		int even = 1;
-		for ( int p = i; p; p >>= 1 )
-			even ^= p;
-		int n = (i & (S80 | F20 | F08)) | ((even & 1) * P04);
-		szpc [i] = n;
-		szpc [i + 0x100] = n | C01;
-	}
-	szpc [0x000] |= Z40;
-	szpc [0x100] |= Z40;
 }
 
 void Ay_Cpu::reset( void* m )
 {
 	mem = (uint8_t*) m;
 
-	check( state == &state_ );
-	state = &state_;
-	state_.time = 0;
-	state_.base = 0;
-	end_time_   = 0;
-
-	memset( &r, 0, sizeof r );
+	Z80_Cpu::reset();
 }
 
 #define TIME                        (s_time + s.base)

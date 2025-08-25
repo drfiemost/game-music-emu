@@ -30,28 +30,15 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA */
 // Callbacks to emulator
 
 #define CPU_OUT( cpu, addr, data, time )\
-	kss_cpu_out( this, time, addr, data )
+	kss_cpu_out( cpu, time, addr, data )
 
 #define CPU_IN( cpu, addr, time )\
-	kss_cpu_in( this, time, addr )
+	kss_cpu_in( cpu, time, addr )
 
 #define CPU_WRITE( cpu, addr, data, time )\
-	(SYNC_TIME(), kss_cpu_write( this, addr, data ))
+	(SYNC_TIME(), kss_cpu_write( cpu, addr, data ))
 
 #include "blargg_source.h"
-
-// flags, named with hex value for clarity
-enum {
-    S80 = 0x80,
-    Z40 = 0x40,
-    F20 = 0x20,
-    H10 = 0x10,
-    F08 = 0x08,
-    V04 = 0x04,
-    P04 = 0x04,
-    N02 = 0x02,
-    C01 = 0x01
-};
 
 #define SZ28P( n )  szpc [n]
 #define SZ28PC( n ) szpc [n]
@@ -63,40 +50,25 @@ enum {
 
 Kss_Cpu::Kss_Cpu()
 {
-	state = &state_;
-
-	for ( int i = 0x100; --i >= 0; )
-	{
-		int even = 1;
-		for ( int p = i; p; p >>= 1 )
-			even ^= p;
-		int n = (i & (S80 | F20 | F08)) | ((even & 1) * P04);
-		szpc [i] = n;
-		szpc [i + 0x100] = n | C01;
-	}
-	szpc [0x000] |= Z40;
-	szpc [0x100] |= Z40;
+	mem_state = &mem_state_;
 }
 
 inline void Kss_Cpu::set_page( int i, void* write, void const* read )
 {
 	int32_t offset = KSS_CPU_PAGE_OFFSET( i * (int32_t) page_size );
-	state->write [i] = (byte      *) write - offset;
-	state->read  [i] = (byte const*) read  - offset;
+	mem_state->write [i] = (byte      *) write - offset;
+	mem_state->read  [i] = (byte const*) read  - offset;
 }
 
 void Kss_Cpu::reset( void* unmapped_write, void const* unmapped_read )
 {
-	check( state == &state_ );
-	state = &state_;
-	state_.time = 0;
-	state_.base = 0;
-	end_time_   = 0;
+	check( mem_state == &mem_state_ );
+	mem_state = &mem_state_;
 
 	for ( int i = 0; i < page_count + 1; i++ )
 		set_page( i, unmapped_write, unmapped_read );
 
-	memset( &r, 0, sizeof r );
+	Z80_Cpu::reset();
 }
 
 void Kss_Cpu::map_mem( unsigned addr, uint32_t size, void* write, void const* read )
@@ -114,7 +86,7 @@ void Kss_Cpu::map_mem( unsigned addr, uint32_t size, void* write, void const* re
 }
 
 #define TIME                        (s_time + s.base)
-#define RW_MEM( addr, rw )          (s.rw [(addr) >> page_shift] [KSS_CPU_PAGE_OFFSET( addr )])
+#define RW_MEM( addr, rw )          (ms.rw [(addr) >> page_shift] [KSS_CPU_PAGE_OFFSET( addr )])
 #define READ_PROG( addr )           RW_MEM( addr, read )
 #define READ( addr )                READ_PROG( addr )
 //#define WRITE( addr, data )       (void) (RW_MEM( addr, write ) = data)
@@ -138,7 +110,7 @@ void Kss_Cpu::map_mem( unsigned addr, uint32_t size, void* write, void const* re
 #define R16( n, shift, offset )\
 	(*(uint16_t*) ((char*) r16_ - (offset >> (shift - 1)) + ((n) >> (shift - 1))))
 
-#define CASE5( a, b, c, d, e          ) /*FALLTHRU*/ case 0x##a:case 0x##b:case 0x##c:case 0x##d:case 0x##e
+#define CASE5( a, b, c, d, e          ) /* FALLTHRU */ case 0x##a:case 0x##b:case 0x##c:case 0x##d:case 0x##e
 #define CASE6( a, b, c, d, e, f       ) CASE5( a, b, c, d, e       ): case 0x##f
 #define CASE7( a, b, c, d, e, f, g    ) CASE6( a, b, c, d, e, f    ): case 0x##g
 #define CASE8( a, b, c, d, e, f, g, h ) CASE7( a, b, c, d, e, f, g ): case 0x##h
@@ -169,6 +141,8 @@ bool Kss_Cpu::run( cpu_time_t end_time )
 	set_end_time( end_time );
 	state_t s = this->state_;
 	this->state = &s;
+	mem_state_t ms = this->mem_state_;
+	this->mem_state = &ms;
 	bool warning = false;
 
 	union {
@@ -202,7 +176,7 @@ loop:
 	check( (unsigned) ix < 0x10000 );
 	check( (unsigned) iy < 0x10000 );
 
-	uint8_t const* instr = s.read [pc >> page_shift];
+	uint8_t const* instr = ms.read [pc >> page_shift];
 #define GET_ADDR()  GET_LE16( instr )
 
 	uint_fast8_t opcode;
@@ -1695,6 +1669,8 @@ out_of_time:
 	this->r.b = rg;
 	this->state_ = s;
 	this->state = &this->state_;
+	this->mem_state_ = ms;
+	this->mem_state = &this->mem_state_;
 
 	return warning;
 }

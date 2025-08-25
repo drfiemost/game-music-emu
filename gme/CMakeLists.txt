@@ -44,6 +44,8 @@ if(USE_GME_AY OR USE_GME_KSS)
     list(APPEND libgme_SRCS
                 Ay_Apu.cpp
                 Ay_Apu.h
+                Z80_Cpu.cpp
+                Z80_Cpu.h
         )
 endif()
 

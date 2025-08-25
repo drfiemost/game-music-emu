@@ -90,6 +90,7 @@ LOCAL_SRC_FILES := \
 	gme/Ym2612_Nuked.cpp \
 	gme/Ym2612_GENS.cpp \
 	gme/Ym2612_MAME.cpp \
+	gme/Z80_Cpu.cpp \
 	gme/ext/emu2413.c \
 	gme/ext/panning.c \
 	gme/gme.cpp
